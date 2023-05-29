@@ -2,7 +2,11 @@ use std::error::Error;
 use wgpu::CompositeAlphaMode;
 use wgpu_glyph::{ab_glyph, GlyphBrushBuilder, Section, Text};
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
+    futures_lite::future::block_on(run()).unwrap();
+}
+
+async fn run() -> Result<(), Box<dyn Error>> {
     env_logger::init();
 
     // Open window and create a surface
@@ -13,25 +17,33 @@ fn main() -> Result<(), Box<dyn Error>> {
         .build(&event_loop)
         .unwrap();
 
-    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
+    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+        backends: wgpu::Backends::PRIMARY,
+        ..Default::default()
+    });
     let surface = unsafe { instance.create_surface(&window)? };
 
-    // Initialize GPU
-    let (device, queue) = futures::executor::block_on(async {
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::HighPerformance,
-                compatible_surface: Some(&surface),
-                force_fallback_adapter: false,
-            })
-            .await
-            .expect("Request adapter");
+    let adapter = instance
+        .request_adapter(&wgpu::RequestAdapterOptions {
+            power_preference: wgpu::PowerPreference::HighPerformance,
+            compatible_surface: Some(&surface),
+            force_fallback_adapter: false,
+        })
+        .await
+        .unwrap();
 
-        adapter
-            .request_device(&wgpu::DeviceDescriptor::default(), None)
-            .await
-            .expect("Request device")
-    });
+    // Initialize GPU
+    let (device, queue) = adapter
+        .request_device(
+            &wgpu::DeviceDescriptor {
+                label: None,
+                features: adapter.features(),
+                limits: wgpu::Limits::default(),
+            },
+            None,
+        )
+        .await
+        .expect("Request device");
 
     // Create staging belt
     let mut staging_belt = wgpu::util::StagingBelt::new(1024);
