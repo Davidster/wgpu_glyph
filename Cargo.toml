@@ -11,8 +11,8 @@ documentation = "https://docs.rs/wgpu_glyph"
 readme = "README.md"
 
 [dependencies]
-wgpu = { path = "../gents_wgpu/wgpu" }
-# wgpu = { git = "https://github.com/gents83/wgpu.git" }
+# wgpu = { path = "../gents_wgpu/wgpu" }
+wgpu = { git = "https://github.com/gents83/wgpu.git" }
 # wgpu = { git = "https://github.com/gfx-rs/wgpu.git" }
 glyph_brush = "0.7"
 log = "0.4"
